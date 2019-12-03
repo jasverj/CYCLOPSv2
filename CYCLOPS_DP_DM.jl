@@ -45,3 +45,5 @@ function makefloat!(df::DataFrame) # will convert to Array{Float} first
     end
     ar = convert(Array{Float32, 2}, ar)
 end
+
+end

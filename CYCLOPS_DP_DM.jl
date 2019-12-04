@@ -128,14 +128,14 @@ end
 
 
 
-#####################
-# begin cleandata! #
+##########################
+# begin removeOutliers! #
 ###########################################################################################
 # Replace outliers from data according to bluntpercent eith new min and max values       #
 #########################################################################################
-# Method 1: Array{Float32,2}                           								   #
+# Method 1: Array{Float32,2}                                                           #
 #-------------------------------------------------------------------------------------#
-function removeOuliers!(data::Array{Float32, 2}, bluntpercent)
+function removeOutliers!(data::Array{Float32, 2}, bluntpercent)
 	ngenes, nsamples = size(data) # number of rows = ngenes, number of columns = nsamples
 	nfloor = Int(1 + floor((1 - bluntpercent) * nsamples)) # index of lowest value to be kept
 	nceiling = Int(ceil(bluntpercent*nsamples)) # index of highest value to be kept
@@ -153,8 +153,28 @@ function removeOuliers!(data::Array{Float32, 2}, bluntpercent)
 end
 #--end function--#
 ###################
-# end cleandata! #
+# end removeOutliers! #
 #################
+
+
+
+########################
+# begin getEigengenes #
+####
+# Convert data to SVD space
+function getEigengenes(numeric_data::Array{Float32, 2}, fraction_var::Number, dfrac_var::Number, maxeig::Number=30)
+    svd_obj = svd(numeric_data) # convert data to SVD object containing singular values and eigengene expression data in SVD space
+    expvar = cumsum(svd_obj.S.^2, dims = 1) / sum(svd_obj.S.^2) # .S are the singular values, sorted in descending order. Find the Fraction variance that an eigengene and each eigengene before it makes up from the total variance.
+
+    ReductionDim1 = 1 + length(expvar[expvar .<= fraction_var]) # how many eigengenes need to be included to have captured the minimum (user specified) variance from the eigengenes (from their singular values)
+    vardif = diff(expvar, dims = 1) # find the difference between each added eigengene
+    ReductionDim2 = 1 + length(vardif[vardif .>= dfrac_var]) # which eigengenes contribute the minimum (user specified) variance
+    ReductionDim = min(ReductionDim1, ReductionDim2, maxeig) # The maximum number of eigengenes (user specified) that will be kept is the last criteria. Whichever is the smallest will be used as the number of eigengenes to keep
+
+    Transform = svd_obj.V[:, 1:ReductionDim]' # .V is the expression of the eigengenes (in SVD space)
+
+    ReductionDim, Array{Float32,2}(10*Transform) # Return the number of eigengenes kept, and
+end
 
 #--------------------#
 # Data Manipulation #

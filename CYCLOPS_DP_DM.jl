@@ -1,8 +1,12 @@
 using DataFrames, Statistics, LinearAlgebra, StatsBase, MultivariateStats, Distributions, CSV, Juno
 
+
+
 #------------------#
 # Data Processing #
 #----------------#
+
+
 
 #####################
 # begin makefloat! #
@@ -26,6 +30,8 @@ function makefloat!(ar::Array{Any}) # convert to Array{Any} first, using convert
 end
 #--end function--#
 
+
+
 #---------------------------------------------------------------#
 # Method 2/3: Array{Any,1} | Array{String,1} to Array{Float32} #
 #-------------------------------------------------------------#
@@ -46,6 +52,8 @@ function makefloat!(ar::Array{Any,1}, flip::Bool=false)
 	ar # return ar
 end
 #--end function--#
+
+
 
 #--------------------------------------------#
 # Method 4: DataFrame to Array{Float32}     #
@@ -161,21 +169,21 @@ end
 
 ########################
 # begin getEigengenes #
-#####################################################################################################################################################################
-# Convert data to SVD space, keeping eigengenes that contribute a minimum (user defined) amount of variance, up to minimum (user defined) total variance captured  #
-###################################################################################################################################################################
-# Method 1: Array{Float32,2}                                                                                                                                     #
-#---------------------------------------------------------------------------------------------------------------------------------------------------------------#
-# Max for total_fraction_var = 1, reasonable value for total_fraction_var = 0.97; Max for indiv_frac_var = 1, reasonable value for indiv_frac_var = 0.025-0.05 #
-#-------------------------------------------------------------------------------------------------------------------------------------------------------------#
-function getEigengenes(numeric_data::Array{Float32, 2}, total_fraction_var::Number, indiv_frac_var::Number, maxeig::Number=30)
-    svd_obj = svd(numeric_data) # convert data to SVD object containing singular values and eigengene expression data in SVD space
+####################################################################################################################################################################
+# Convert data to SVD space, keeping eigengenes that contribute a minimum (user defined) amount of variance, up to minimum (user defined) total variance captured #
+##################################################################################################################################################################
+# Method 1: Array{Float32,2}                                                                                                                                    #
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------#
+# Max for total_var_cap = 1, reasonable value for total_var_cap = 0.97; Max for indiv_var_cont = 1, reasonable value for indiv_var_cont = 0.025 - 0.05        #
+#------------------------------------------------------------------------------------------------------------------------------------------------------------#
+function getEigengenes(seed_data::Array{Float32, 2}, total_var_cap::Number, indiv_var_cont::Number, maxneigg::Number=30)
+    svd_obj = svd(seed_data) # convert data to SVD object containing singular values and eigengene expression data in SVD space
     expvar = cumsum(svd_obj.S.^2, dims = 1) / sum(svd_obj.S.^2) # .S are the singular values, sorted in descending order. Find the Fraction variance that an eigengene and each eigengene before it makes up from the total variance.
 
-    ReductionDim1 = 1 + length(expvar[expvar .<= total_fraction_var]) # how many eigengenes need to be included to have captured the minimum (user specified) variance from the eigengenes (from their singular values)
+    ReductionDim1 = 1 + length(expvar[expvar .<= total_var_cap]) # how many eigengenes need to be included to have captured the minimum (user specified) variance from the eigengenes (from their singular values)
     vardif = diff(expvar, dims = 1) # find the difference between each added eigengene
-    ReductionDim2 = 1 + length(vardif[vardif .>= indiv_frac_var]) # which eigengenes contribute the minimum (user specified) variance
-    ReductionDim = min(ReductionDim1, ReductionDim2, maxeig) # The last criteria is the maximum number of eigengenes (user specified) that will be kept. Whichever is the smallest is the number of eigengenes kept
+    ReductionDim2 = 1 + length(vardif[vardif .>= indiv_var_cont]) # which eigengenes contribute the minimum (user specified) variance
+    ReductionDim = min(ReductionDim1, ReductionDim2, maxneigg) # The last criteria is the maximum number of eigengenes (user specified) that will be kept. Whichever is the smallest is the number of eigengenes kept
 
     Transform = svd_obj.V[:, 1:ReductionDim]' # .V is the expression of the eigengenes (in SVD space)
 
@@ -188,9 +196,49 @@ end
 
 
 
+#----------------------#
+# end Data Processing #
+#--------------------#
+
+#-----------------------------------------------------------------------------#
+
 #--------------------#
 # Data Manipulation #
 #------------------#
+
+
+
+#######################
+# begin genSynthData #
+#############################################################################
+# Generate synthetic data from real data                                   #
+###########################################################################
+# Method 1: DataFrame to Array{Float32}                                  #
+#-----------------------------------------------------------------------#
+# Original data is scaled and offset is added to create synthetic data #
+#---------------------------------------------------------------------#----------------------------------------------------------------------------------------------------------#
+# INFO: this function can only be used if the first and second row contain subject number and time of death, and the first through third column contain probes and gene symbols #
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+function gensynthdata(OGdf::DataFrame, SF::Number, offset::Number=0.0, LOG=false)
+    stdev = abs.(SF - 1)/3.8905 # 99.9% lie between 1 and 1+2*(SF-1)
+    offsetstd = offset/2.575 # 95% lie between ± offset
+    ogdata = CYCLOPS_PrePostProcessModule.makefloat!(OGdf[3:end,4:end]) # convert data to matrix of Float32
+	if LOG == false # if LOG is false use normal distribution for scaling factor
+    	synthData = (SF .+ stdev .* randn(size(ogdata,1))) .* ogdata .+ (mean(ogdata, dims = 2) .* (offsetstd .* randn(size(ogdata,1)))) # SF from N~(x̄,σ^2) and (percent of mean) offset to create synth data
+	else # or LOG is true and log-normal distribution is used
+		synthData = exp(stdev .* randn(size(ogdata,1))) .* ogdata .+ (mean(ogdata, dims = 2) .* (offsetstd .* randn(size(ogdata,1)))) # SF from exp(N~(x̄,σ^2)) and (percent of mean) offset to create synth data
+	end #--end if--#
+    batchsize = size(ogdata,2)
+
+    batchsize, [ogdata syndata] # new full data set
+end
+#--end function--#
+#####################
+# end genSynthData #
+###################
+
+
+
 
 end
 #--end module--#

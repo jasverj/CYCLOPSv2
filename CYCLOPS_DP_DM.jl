@@ -102,22 +102,22 @@ end
 ####################################################################################
 # Method 1: Array{Float32}                                                        #
 #--------------------------------------------------------------------------------#
-function getSeedData(data_data, symbol_list, data_symbols, maxcv, mincv, minmean, bluntpercent)
-	data_data = Array{Float32}(data_data) # convert Array{Float32} to increase speed
-	data_data = cleandata!(data_data, bluntpercent) # remove outliers according to blunt and replace lowest and highest value with new min and max
+function getSeedData(OG_data, symbols_of_interest, data_symbol_list, maxCV, minCV, minMean, bluntPercent)
+	OG_data = Array{Float32}(OG_data) # convert Array{Float32} to increase speed
+	cleaned_data = removeOutliers!(OG_data, bluntpercent) # remove outliers according to blunt and replace lowest and highest value with new min and max
 
-	gene_means = vec(mean(data_data, dims=2)) # get the means of each row
-	gene_sds = vec(std(data_data; dims=2)) # get the standard deviation of each row
+	gene_means = vec(mean(cleaned_data, dims=2)) # get the means of each row
+	gene_sds = vec(std(cleaned_data; dims=2)) # get the standard deviation of each row
 	gene_cvs = gene_sds ./ gene_means # get the coefficient of variation (CV) -- CV is a good measure of relative variability
 
-	criteria1 = findall(in(symbol_list), data_symbols) # find genes list of known genes in full list of genes from data set
-	criteria2 = findall(gene_means .> minmean) # find all genes with a mean expression level greater than the minimum (user defined) mean
-	criteria3 = findall(gene_cvs .> mincv) # find all genes with a CV greater than the minimum (user defined) CV...
-	criteria4 = findall(gene_cvs .< maxcv) # ...but smaller than the maximum (user defined) CV.
+	criteria1 = findall(in(symbols_of_interest), data_symbol_list) # find genes list of known genes in full list of genes from data set
+	criteria2 = findall(gene_means .> minMean) # find all genes with a mean expression level greater than the minimum (user defined) mean
+	criteria3 = findall(gene_cvs .> minCV) # find all genes with a CV greater than the minimum (user defined) CV...
+	criteria4 = findall(gene_cvs .< maxCV) # ...but smaller than the maximum (user defined) CV.
 
-	allcriteria = intersect(criteria1, criteria2, criteria3, criteria4) # find all the genes for which all conditions are true
-	seed_data = data_data[allcriteria, :] # store all samples of genes that meat all the criteria in seed_data
-	seed_symbols = data_symbols[allcriteria, :] # store all the names of the genes being kept in seed_symbols
+	allCriteria = intersect(criteria1, criteria2, criteria3, criteria4) # find all the genes for which all conditions are true
+	seed_data = OG_data[allCriteria, :] # store all samples of genes that meat all the criteria in seed_data
+	seed_symbols = data_symbol_list[allCriteria, :] # store all the names of the genes being kept in seed_symbols
 
 	seed_symbols, seed_data # return the stored gene names and their respective samples
 end
@@ -135,7 +135,7 @@ end
 #########################################################################################
 # Method 1: Array{Float32,2}                           								   #
 #-------------------------------------------------------------------------------------#
-function cleandata!(data::Array{Float32, 2}, bluntpercent)
+function removeOuliers!(data::Array{Float32, 2}, bluntpercent)
 	ngenes, nsamples = size(data) # number of rows = ngenes, number of columns = nsamples
 	nfloor = Int(1 + floor((1 - bluntpercent) * nsamples)) # index of lowest value to be kept
 	nceiling = Int(ceil(bluntpercent*nsamples)) # index of highest value to be kept

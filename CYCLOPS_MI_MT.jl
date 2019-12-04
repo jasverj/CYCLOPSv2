@@ -1,8 +1,12 @@
 using Flux, Juno, DataFrames, Statistics, LinearAlgebra, StatsBase, MultivariateStats, Distributions, CSV
 
+
+
 #-----------------------#
 # Model Initialization #
 #---------------------#
+
+
 
 ###############
 # begin circ #
@@ -17,6 +21,7 @@ end
 #############
 # end circ #
 ###########
+
 
 
 #####################
@@ -35,6 +40,7 @@ end
 #--end type--#
 
 
+
 #----------------------#
 # Function CYCLOPS v1 #
 #--------------------#
@@ -46,6 +52,7 @@ function (m::CYCLOPSv1)(x)
     L2out = m.L2(circout)
 end
 #--end function--#
+
 
 
 #------------------------------------------#
@@ -84,6 +91,7 @@ end
 #--end type--#
 
 
+
 #----------------------#
 # Function CYCLOPS v2 #
 #--------------------#
@@ -97,6 +105,7 @@ function (m::cyclops)(x)
     SparseOut = (Dense2Out.*(m.S2*x[m.o + 1:end]) + m.b2*x[m.o + 1:end])
 end
 #--end function--#
+
 
 
 #----------------------------------#
@@ -126,7 +135,42 @@ function genCYCLOPSv2(td, w::Number=1)
     return [cyclops(param(S1), param(b1), Dense(td[2],2+l), circ, Dense(2+l,td[2]), param(S2), param(b2), td[1], td[2])]
 end
 #--end function--#
+###################
+# end CYCLOPS v2 #
+#################
 
+
+
+#---------------------------#
+# end Model Initialization #
+#-------------------------#
+
+#-----------------------------------------------------------------------------#
+
+#-----------------#
+# Model Training #
+#---------------#
+
+
+
+###########
+# begin
+#########
+#
+######
+#
+#-------
+
+#--end method--#
+##########
+# end
+##########
+
+
+
+#---------------------#
+# end Model Training #
+#-------------------#
 
 end
 #--end module--#

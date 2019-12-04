@@ -8,7 +8,6 @@ using Flux, Juno, DataFrames, Statistics, LinearAlgebra, StatsBase, Multivariate
 #
 #---------
 
-
 #--end method--#
 ######
 # end

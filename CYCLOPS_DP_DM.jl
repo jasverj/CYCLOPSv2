@@ -28,7 +28,7 @@ function makefloat!(ar::Array{Any}) # convert to Array{Any} first, using convert
 
     ar = convert(Array{Float32, 2}, ar) # Now that all fields are type Float32 the Array{Any} can be converted to Array{Float32}
 end
-#--end function--#
+#--end method--#
 
 
 
@@ -51,7 +51,7 @@ function makefloat!(ar::Array{Any,1}, flip::Bool=false)
 
 	ar # return ar
 end
-#--end function--#
+#--end method--#
 
 
 
@@ -72,7 +72,7 @@ function makefloat!(df::DataFrame) # will convert to Array{Float} first
 
     ar = convert(Array{Float32, 2}, ar) # Now that all elements are type Float32 the Array{Any} can be converted to an Array{Float32}
 end
-#--end function--#
+#--end method--#
 ###################
 # end makefloat! #
 #################
@@ -96,7 +96,7 @@ function findNAtime(df)
 
     r # return the list containing indeces for elements containing the string NA
 end
-#--end function--#
+#--end method--#
 ###################
 # end findNAtime #
 #################
@@ -129,7 +129,7 @@ function getSeedData(OG_data, symbols_of_interest, data_symbol_list, maxCV, minC
 
 	seed_symbols, seed_data # return the stored gene names and their respective samples
 end
-#--end function--#
+#--end method--#
 ####################
 # end getSeedData #
 ##################
@@ -143,7 +143,8 @@ end
 ###################################################################################
 # Method 1: Array{Float32,2}                                                     #
 #-------------------------------------------------------------------------------#
-# Max for bluntPercent
+# INFO: Max for bluntPercent = 1, reasonable value for bluntPercent = 0.975    #
+#-----------------------------------------------------------------------------#
 function removeOutliers!(data::Array{Float32, 2}, bluntPercent)
 	ngenes, nsamples = size(data) # number of rows = ngenes, number of columns = nsamples
 	nfloor = Int(1 + floor((1 - bluntPercent) * nsamples)) # index of lowest value to be kept
@@ -160,7 +161,7 @@ function removeOutliers!(data::Array{Float32, 2}, bluntPercent)
 
 	data
 end
-#--end function--#
+#--end method--#
 ########################
 # end removeOutliers! #
 ######################
@@ -174,7 +175,7 @@ end
 ##################################################################################################################################################################
 # Method 1: Array{Float32,2}                                                                                                                                    #
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------#
-# Max for total_var_cap = 1, reasonable value for total_var_cap = 0.97; Max for indiv_var_cont = 1, reasonable value for indiv_var_cont = 0.025 - 0.05        #
+# INFO: Max for total_var_cap = 1, reasonable value for total_var_cap = 0.97; Max for indiv_var_cont = 1, reasonable value for indiv_var_cont = 0.025 - 0.05  #
 #------------------------------------------------------------------------------------------------------------------------------------------------------------#
 function getEigengenes(seed_data::Array{Float32, 2}, total_var_cap::Number, indiv_var_cont::Number, maxneigg::Number=30)
     svd_obj = svd(seed_data) # convert data to SVD object containing singular values and eigengene expression data in SVD space
@@ -189,7 +190,7 @@ function getEigengenes(seed_data::Array{Float32, 2}, total_var_cap::Number, indi
 
     ReductionDim, Array{Float32,2}(10*Transform) # Return the number of eigengenes kept, and the expression of the eigengenes.
 end
-#--end function--#
+#--end method--#
 ######################
 # end getEigengenes #
 ####################
@@ -232,7 +233,7 @@ function gensynthdata(OGdf::DataFrame, SF::Number, offset::Number=0.0, LOG=false
 
     batchsize, [ogdata syndata] # new full data set
 end
-#--end function--#
+#--end method--#
 #####################
 # end genSynthData #
 ###################
